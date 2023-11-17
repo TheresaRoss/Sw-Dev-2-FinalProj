@@ -24,8 +24,8 @@ import HomeIcon from "@mui/icons-material/Home";
 import { blue, red } from "@mui/material/colors";
 import {useSession} from 'next-auth/react'
 import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
-
-
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import { log } from "console";
 const drawerWidth = 240;
 
 const openedMixin = (theme: Theme): CSSObject => ({
@@ -78,7 +78,8 @@ const Drawer = styled(MuiDrawer, {
 export default function Sidebar() {
   
   const {data:session} = useSession()
-
+  //console.log(session);
+  
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -192,7 +193,29 @@ export default function Sidebar() {
           );
         })}
       </List>
-      
+      <Divider />
+      <List>
+      <ListItem disablePadding sx={{ display: "block" }}>
+          <ListItemButton
+            sx={{
+              minHeight: 48,
+              justifyContent: open ? "initial" : "center",
+              px: 2.5,
+            }}
+            component="a"
+            href={session?'/api/auth/signout':'/api/auth/signin'}>
+            <ListItemIcon
+              sx={{
+                minWidth: 0,
+                mr: open ? 3 : "auto",
+                justifyContent: "center",
+              }}>
+              <AccountCircleIcon />
+            </ListItemIcon>
+            <ListItemText primary={session?`Sign-Out of ${session.user?.name}`:'Sign-In'} sx={{ opacity: open ? 1 : 0 }} />
+          </ListItemButton>
+        </ListItem>
+      </List>
       <Divider />
        <List>
         <ListItem disablePadding sx={{ display: "block" }}>
