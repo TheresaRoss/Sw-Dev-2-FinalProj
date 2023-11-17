@@ -47,6 +47,25 @@ export async function updateRestaurant(
   }
 }
 
+export async function getRestaurant(id: string) {
+  try {
+    const res = await fetch(
+      process.env.NEXT_PUBLIC_API_ROUTE + `/api/v1/restaurants/${id}`,
+      {
+        method: "GET",
+        cache: "no-store",
+      }
+    );
+    if (res.ok) {
+      return res.json();
+    } else {
+      return null;
+    }
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 export async function getRestaurantList() {
   try {
     const res = await fetch(
