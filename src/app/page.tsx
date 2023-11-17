@@ -1,5 +1,11 @@
 import Image from "next/image";
+import Signin from "./component/Signin";
 
-export default function Home() {
-  return <div className="text-[200px]">Your mum</div>;
+export default async function Home() {
+
+  return <div className="text-[20px]">
+    Your mum
+    <Signin/>
+    </div>;
+
 }
