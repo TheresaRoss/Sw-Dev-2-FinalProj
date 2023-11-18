@@ -6,6 +6,7 @@ import {
   updateRestaurant,
 } from "@/lib/api/restaurant";
 import {
+  ReservationResponse,
   RestaurantModel,
   RestaurantResponse,
   restaurantModel,
@@ -41,8 +42,10 @@ interface TabPanelProps {
 }
 export default function MainRes({
   restaurantList,
+  reservationList,
 }: {
   restaurantList: RestaurantResponse[];
+  reservationList: ReservationResponse[];
 }) {
   const [tab, setTab] = useState(0);
 
@@ -66,7 +69,7 @@ export default function MainRes({
           <Restaurant restaurantList={restaurantList} />
         </CustomTabPanel>
         <CustomTabPanel value={tab} index={1}>
-          <Reservation reservationList={restaurantList} />
+          <Reservation reservationList={reservationList} />
         </CustomTabPanel>
       </Box>
     </div>

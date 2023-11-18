@@ -1,16 +1,16 @@
 "use client";
 
 import {
-  createRestaurant,
   removeRestaurant,
   updateRestaurant,
+  createRestaurant,
 } from "@/lib/api/restaurant";
 import {
+  ReservationModel,
+  ReservationResponse,
   RestaurantModel,
-  RestaurantResponse,
-  restaurantModel,
+  reservationModel,
 } from "@/lib/interface/restaurant";
-
 import {
   Modal,
   Backdrop,
@@ -36,7 +36,7 @@ import React, { useState, Fragment, useEffect } from "react";
 export default function Reservation({
   reservationList,
 }: {
-  reservationList: RestaurantResponse[];
+  reservationList: ReservationResponse[];
 }) {
   const [openCreate, setCreate] = useState(false);
   return (
@@ -48,25 +48,29 @@ export default function Reservation({
         <Button variant="outlined" onClick={() => setCreate(true)}>
           Add Reservation
         </Button>
-        <AddRestaurant openState={[openCreate, setCreate]} />
+        {/* <AddRestaurant openState={[openCreate, setCreate]} /> */}
       </div>
       <div className="grid grid-cols-2 gap-5">
         {reservationList.length >= 0 ? (
-          reservationList.map((restaurant: RestaurantResponse) => (
-            <ReservationCard key={restaurant.id} restaurant={restaurant} />
+          reservationList.map((reservation: ReservationResponse) => (
+            <ReservationCard key={reservation._id} reservation={reservation} />
           ))
         ) : (
-          <Typography>Not joined any restaurant</Typography>
+          <Typography>Not joined any reservation</Typography>
         )}
       </div>
     </div>
   );
 }
 
-function ReservationCard({ restaurant }: { restaurant: RestaurantResponse }) {
+function ReservationCard({
+  reservation,
+}: {
+  reservation: ReservationResponse;
+}) {
   const router = useRouter();
   const [snackOpen, setSnackOpen] = React.useState(false);
-  const [successText, setSuccessText] = React.useState("Removed restaurant!");
+  const [successText, setSuccessText] = React.useState("Removed reservation!");
   const [openCreate, setCreate] = useState(false);
   const handleClose = (
     event?: React.SyntheticEvent | Event,
@@ -97,38 +101,36 @@ function ReservationCard({ restaurant }: { restaurant: RestaurantResponse }) {
   return (
     <Card variant="outlined">
       <CardContent>
-        <Link href={`/restaurant/${restaurant.id}`}>
-          <Typography variant="h5" component="div">
-            {restaurant.name}
-          </Typography>
-        </Link>
+        <Typography variant="h5" component="div">
+          {reservation.user}
+        </Typography>
 
         <Typography variant="body2">
-          Food Type: {restaurant.foodtype}
+          Restaurant: {reservation.restaurant.name}
         </Typography>
-        <Typography variant="body2">Address: {restaurant.address}</Typography>
-        <Typography variant="body2">Province: {restaurant.province}</Typography>
         <Typography variant="body2">
-          Postal Code: {restaurant.postalcode}
+          Number of Guests: {reservation.numOfGuests}
         </Typography>
-        <Typography variant="body2">Telephone: {restaurant.tel}</Typography>
         <Typography variant="body2">
-          Picture URL: {restaurant.picture}
+          Booking Date: {reservation.bookingDate}
+        </Typography>
+        <Typography variant="body2">
+          Created At: {reservation.createdAt}
         </Typography>
       </CardContent>
       <CardActions sx={{ float: "right" }}>
         <Button size="small" variant="outlined" onClick={() => setCreate(true)}>
           Edit restautant
         </Button>
-        <AddRestaurant
+        {/* <AddRestaurant
           openState={[openCreate, setCreate]}
-          restaurantProp={restaurant}
-          idProp={restaurant.id}
-        />
+          reservationProp={reservation}
+          idProp={reservation._id}
+        /> */}
         <Button
           variant="outlined"
           color="error"
-          onClick={() => remove(restaurant.id)}
+          onClick={() => remove(reservation._id)}
           size="small">
           Delete
         </Button>
@@ -144,44 +146,44 @@ function ReservationCard({ restaurant }: { restaurant: RestaurantResponse }) {
 
 function AddRestaurant({
   openState: [open, setOpen],
-  restaurantProp,
+  reservationProp,
   idProp,
 }: {
   openState: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
-  restaurantProp?: RestaurantModel;
+  reservationProp?: RestaurantModel;
   idProp?: string;
 }) {
   const [snackOpen, setSnackOpen] = React.useState(false);
   const [successText, setSuccessText] = React.useState("");
   const router = useRouter();
 
-  const [restaurant, setRestaurant] =
-    useState<RestaurantModel>(restaurantModel);
+  const [reservation, setRestaurant] =
+    useState<ReservationModel>(reservationModel);
   const onChange = (e: any) => {
-    setRestaurant({ ...restaurant, [e.target.name]: e.target.value });
+    setRestaurant({ ...reservation, [e.target.name]: e.target.value });
   };
 
   useEffect(() => {
-    if (restaurantProp) {
-      setRestaurant(restaurantProp);
+    if (reservationProp) {
+      //setRestaurant(reservationProp);
     }
-  }, [restaurantProp]);
+  }, [reservationProp]);
 
   const onSubmit = async () => {
     try {
       let res;
-      if (restaurantProp && idProp) {
-        res = await updateRestaurant(restaurant, idProp);
+      if (reservationProp && idProp) {
+        //res = await updateRestaurant(reservation, idProp);
         setSuccessText("Edited Restaurant!");
       } else {
-        res = await createRestaurant(restaurant);
+        // res = await createRestaurant(reservation);
         setSuccessText("Add Restaurant Completed!");
       }
 
       if (res.success) {
         setSnackOpen(true);
         setOpen(false);
-        setRestaurant(restaurantModel);
+        setRestaurant(reservationModel);
         router.refresh();
       }
     } catch (err) {
@@ -238,7 +240,7 @@ function AddRestaurant({
                 name="name"
                 label="Name"
                 onChange={onChange}
-                value={restaurant.name}
+                value={reservation.name}
                 fullWidth
                 sx={{ display: "block" }}
               />
@@ -247,7 +249,7 @@ function AddRestaurant({
                 name="foodtype"
                 label="Food Type"
                 onChange={onChange}
-                value={restaurant.foodtype}
+                value={reservation.foodtype}
                 fullWidth
                 sx={{ display: "block" }}
               />
@@ -256,7 +258,7 @@ function AddRestaurant({
                 name="address"
                 label="Address"
                 onChange={onChange}
-                value={restaurant.address}
+                value={reservation.address}
                 fullWidth
                 sx={{ display: "block" }}
               />
@@ -265,7 +267,7 @@ function AddRestaurant({
                 name="province"
                 label="Province"
                 onChange={onChange}
-                value={restaurant.province}
+                value={reservation.province}
                 fullWidth
                 sx={{ display: "block" }}
               />
@@ -274,7 +276,7 @@ function AddRestaurant({
                 name="postalcode"
                 label="Postal Code"
                 onChange={onChange}
-                value={restaurant.postalcode}
+                value={reservation.postalcode}
                 fullWidth
                 sx={{ display: "block" }}
                 inputProps={{ minLength: 5, maxLength: 5 }}
@@ -284,7 +286,7 @@ function AddRestaurant({
                 name="tel"
                 label="Telephone"
                 onChange={onChange}
-                value={restaurant.tel}
+                value={reservation.tel}
                 fullWidth
                 sx={{ display: "block" }}
               />
@@ -293,7 +295,7 @@ function AddRestaurant({
                 name="picture"
                 label="Picture URL"
                 onChange={onChange}
-                value={restaurant.picture}
+                value={reservation.picture}
                 fullWidth
                 sx={{ display: "block" }}
               />

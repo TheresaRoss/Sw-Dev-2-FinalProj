@@ -92,11 +92,9 @@ function RestaurantCard({ restaurant }: { restaurant: RestaurantResponse }) {
   return (
     <Card variant="outlined">
       <CardContent>
-        <Link href={`/restaurant/${restaurant.id}`}>
-          <Typography variant="h5" component="div">
-            {restaurant.name}
-          </Typography>
-        </Link>
+        <Typography variant="h5" component="div">
+          {restaurant.name}
+        </Typography>
 
         <Typography variant="body2">
           Food Type: {restaurant.foodtype}

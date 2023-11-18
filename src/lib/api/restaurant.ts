@@ -68,13 +68,10 @@ export async function getRestaurant(id: string) {
 
 export async function getRestaurantList() {
   try {
-    const res = await fetch(
-      process.env.NEXT_PUBLIC_API_ROUTE + "/api/v1/restaurants",
-      {
-        method: "GET",
-        cache: "no-store",
-      }
-    );
+    const res = await fetch(process.env.API_ROUTE + "/api/v1/restaurants", {
+      method: "GET",
+      cache: "no-store",
+    });
     if (res.ok) {
       return res.json();
     } else {
