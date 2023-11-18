@@ -2,6 +2,7 @@
 
 import {
   createRestaurant,
+  getMe,
   removeRestaurant,
   updateRestaurant,
 } from "@/lib/api/restaurant";
@@ -34,6 +35,7 @@ import {
 import React, { useState, Fragment, useEffect } from "react";
 import Restaurant from "./restaurant";
 import Reservation from "./reservation";
+import { useSession } from "next-auth/react";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -48,6 +50,7 @@ export default function MainRes({
   reservationList: ReservationResponse[];
 }) {
   const [tab, setTab] = useState(0);
+  const { data: session } = useSession();
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setTab(newValue);

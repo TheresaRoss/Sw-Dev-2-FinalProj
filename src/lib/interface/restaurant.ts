@@ -44,5 +44,5 @@ export const reservationModel = (): ReservationModel => ({
   bookingDate: "",
   numOfGuests: "",
 
-  createdAt: "",
+  createdAt: new Date().toISOString().split("T")[0],
 });

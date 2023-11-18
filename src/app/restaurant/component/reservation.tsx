@@ -1,6 +1,11 @@
 "use client";
 
 import {
+  createReservation,
+  removeReservation,
+  updateReservation,
+} from "@/lib/api/reservation";
+import {
   removeRestaurant,
   updateRestaurant,
   createRestaurant,
@@ -27,6 +32,9 @@ import {
   CardActions,
   CardContent,
 } from "@mui/material";
+import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { useSession } from "next-auth/react";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -39,24 +47,21 @@ export default function Reservation({
   reservationList: ReservationResponse[];
 }) {
   const [openCreate, setCreate] = useState(false);
+  //console.log(reservationList);
   return (
     <div>
       <div className="mb-5 mx-5 flex flex-row items-baseline justify-between">
         <Typography variant="h5" className="">
           Reservation List
         </Typography>
-        <Button variant="outlined" onClick={() => setCreate(true)}>
-          Add Reservation
-        </Button>
-        {/* <AddRestaurant openState={[openCreate, setCreate]} /> */}
       </div>
       <div className="grid grid-cols-2 gap-5">
-        {reservationList.length >= 0 ? (
+        {reservationList.length > 0 ? (
           reservationList.map((reservation: ReservationResponse) => (
             <ReservationCard key={reservation._id} reservation={reservation} />
           ))
         ) : (
-          <Typography>Not joined any reservation</Typography>
+          <Typography>You do not have any reservation</Typography>
         )}
       </div>
     </div>
@@ -72,6 +77,7 @@ function ReservationCard({
   const [snackOpen, setSnackOpen] = React.useState(false);
   const [successText, setSuccessText] = React.useState("Removed reservation!");
   const [openCreate, setCreate] = useState(false);
+  const { data: session } = useSession();
   const handleClose = (
     event?: React.SyntheticEvent | Event,
     reason?: string
@@ -85,14 +91,13 @@ function ReservationCard({
 
   const remove = async (id: string) => {
     try {
-      const res = await removeRestaurant(id);
-      console.log(res);
-      if (res.success) {
-        setSuccessText("Removed Restaurant!");
-        setSnackOpen(true);
+      const res = await removeReservation(id, session?.user.token);
 
+      setSuccessText("Removed Reservation!");
+      setSnackOpen(true);
+      setTimeout(() => {
         router.refresh();
-      }
+      }, 1000);
     } catch (err) {
       console.log(err);
     }
@@ -102,11 +107,11 @@ function ReservationCard({
     <Card variant="outlined">
       <CardContent>
         <Typography variant="h5" component="div">
-          {reservation.user}
+          {reservation.restaurant.name}
         </Typography>
 
         <Typography variant="body2">
-          Restaurant: {reservation.restaurant.name}
+          Booking name: {reservation.user}
         </Typography>
         <Typography variant="body2">
           Number of Guests: {reservation.numOfGuests}
@@ -117,16 +122,17 @@ function ReservationCard({
         <Typography variant="body2">
           Created At: {reservation.createdAt}
         </Typography>
+        <Typography variant="body2">Reserved By: {reservation.user}</Typography>
       </CardContent>
       <CardActions sx={{ float: "right" }}>
         <Button size="small" variant="outlined" onClick={() => setCreate(true)}>
-          Edit restautant
+          Edit Reservation
         </Button>
-        {/* <AddRestaurant
+        <EditReservation
           openState={[openCreate, setCreate]}
           reservationProp={reservation}
           idProp={reservation._id}
-        /> */}
+        />
         <Button
           variant="outlined"
           color="error"
@@ -144,47 +150,50 @@ function ReservationCard({
   );
 }
 
-function AddRestaurant({
+function EditReservation({
   openState: [open, setOpen],
   reservationProp,
   idProp,
 }: {
   openState: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
-  reservationProp?: RestaurantModel;
-  idProp?: string;
+  reservationProp: ReservationResponse;
+  idProp: string;
 }) {
   const [snackOpen, setSnackOpen] = React.useState(false);
   const [successText, setSuccessText] = React.useState("");
+  const [error, setError] = React.useState(false);
   const router = useRouter();
+  const { data: session } = useSession();
 
-  const [reservation, setRestaurant] =
+  const [reservation, setReservation] =
     useState<ReservationModel>(reservationModel);
-  const onChange = (e: any) => {
-    setRestaurant({ ...reservation, [e.target.name]: e.target.value });
-  };
-
   useEffect(() => {
-    if (reservationProp) {
-      //setRestaurant(reservationProp);
-    }
+    setReservation({
+      ...reservation,
+      ["numOfGuests"]: reservationProp.numOfGuests,
+    });
   }, [reservationProp]);
+  const onChange = (e: any) => {
+    setReservation({ ...reservation, [e.target.name]: e.target.value });
+  };
 
   const onSubmit = async () => {
     try {
-      let res;
-      if (reservationProp && idProp) {
-        //res = await updateRestaurant(reservation, idProp);
-        setSuccessText("Edited Restaurant!");
-      } else {
-        // res = await createRestaurant(reservation);
-        setSuccessText("Add Restaurant Completed!");
-      }
+      let res = await updateReservation(
+        reservation,
+        idProp,
+        session?.user.token
+      );
+      console.log(res);
 
       if (res.success) {
         setSnackOpen(true);
         setOpen(false);
-        setRestaurant(reservationModel);
-        router.refresh();
+        setSuccessText("Edited Reservation!");
+        setReservation(reservationModel);
+        setTimeout(() => {
+          router.refresh();
+        }, 1000);
       }
     } catch (err) {
       console.log(err);
@@ -233,84 +242,55 @@ function AddRestaurant({
               <Typography
                 variant="h5"
                 className="flex items-center justify-center mb-2">
-                Add Restaurant
+                Edit Reservation
               </Typography>
               <TextField
                 id="name"
-                name="name"
-                label="Name"
+                name="numOfGuests"
+                label="Number of guest"
+                type="number"
                 onChange={onChange}
-                value={reservation.name}
+                value={reservation.numOfGuests}
                 fullWidth
                 sx={{ display: "block" }}
               />
-              <TextField
-                id="foodtype"
-                name="foodtype"
-                label="Food Type"
-                onChange={onChange}
-                value={reservation.foodtype}
-                fullWidth
-                sx={{ display: "block" }}
-              />
-              <TextField
-                id="address"
-                name="address"
-                label="Address"
-                onChange={onChange}
-                value={reservation.address}
-                fullWidth
-                sx={{ display: "block" }}
-              />
-              <TextField
-                id="province"
-                name="province"
-                label="Province"
-                onChange={onChange}
-                value={reservation.province}
-                fullWidth
-                sx={{ display: "block" }}
-              />
-              <TextField
-                id="postalcode"
-                name="postalcode"
-                label="Postal Code"
-                onChange={onChange}
-                value={reservation.postalcode}
-                fullWidth
-                sx={{ display: "block" }}
-                inputProps={{ minLength: 5, maxLength: 5 }}
-              />
-              <TextField
-                id="tel"
-                name="tel"
-                label="Telephone"
-                onChange={onChange}
-                value={reservation.tel}
-                fullWidth
-                sx={{ display: "block" }}
-              />
-              <TextField
-                id="picture"
-                name="picture"
-                label="Picture URL"
-                onChange={onChange}
-                value={reservation.picture}
-                fullWidth
-                sx={{ display: "block" }}
-              />
+              <LocalizationProvider
+                adapterLocale={"en-gb"}
+                dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  label="Basic date time picker"
+                  value={reservation.bookingDate}
+                  onChange={(newValue) => {
+                    if (newValue != null) {
+                      setReservation({
+                        ...reservation,
+                        bookingDate: newValue.toString(),
+                      });
+                    }
+                  }}
+                />
+              </LocalizationProvider>
 
               <Button variant="outlined" type="submit">
-                Add Restaurant
+                Add Reservation
               </Button>
             </form>
           </Box>
         </Fade>
       </Modal>
       <Snackbar open={snackOpen} autoHideDuration={3000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity="success" sx={{ width: "100%" }}>
-          {successText}
-        </Alert>
+        {!error ? (
+          <Alert
+            onClose={handleClose}
+            severity="success"
+            sx={{ width: "100%" }}>
+            {successText}
+          </Alert>
+        ) : (
+          <Alert onClose={handleClose} severity="error" sx={{ width: "100%" }}>
+            Cannot make more than 3 reservations
+          </Alert>
+        )}
       </Snackbar>
     </Fragment>
   );

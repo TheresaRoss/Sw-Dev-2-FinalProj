@@ -11,7 +11,7 @@ export default async function Admin() {
   //console.log(restaurantList);
   const reservationList = await getReservationList(session?.user.token);
 
-  console.log(reservationList);
+  //console.log(reservationList);
   return (
     <main className="p-5">
       <MainRes

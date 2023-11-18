@@ -1,3 +1,4 @@
+"use client";
 import {
   removeRestaurant,
   updateRestaurant,
@@ -7,7 +8,10 @@ import {
   RestaurantResponse,
   RestaurantModel,
   restaurantModel,
+  ReservationModel,
+  reservationModel,
 } from "@/lib/interface/restaurant";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import {
   Typography,
   Button,
@@ -22,15 +26,23 @@ import {
   Box,
   TextField,
 } from "@mui/material";
+import {
+  DatePicker,
+  DateTimePicker,
+  LocalizationProvider,
+} from "@mui/x-date-pickers";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect, Fragment } from "react";
+import { createReservation } from "@/lib/api/reservation";
+import { useSession } from "next-auth/react";
 
 export default function Restaurant({
   restaurantList,
 }: {
   restaurantList: RestaurantResponse[];
 }) {
+  const { data: session } = useSession();
   const [openCreate, setCreate] = useState(false);
   return (
     <div>
@@ -38,9 +50,13 @@ export default function Restaurant({
         <Typography variant="h5" className="">
           Restaurant List
         </Typography>
-        <Button variant="outlined" onClick={() => setCreate(true)}>
-          Add restautant
-        </Button>
+        {session?.user.data.role === "admin" ? (
+          <Button variant="outlined" onClick={() => setCreate(true)}>
+            Add restautant
+          </Button>
+        ) : (
+          <></>
+        )}
         <AddRestaurant openState={[openCreate, setCreate]} />
       </div>
       <div className="grid grid-cols-2 gap-5">
@@ -61,6 +77,8 @@ function RestaurantCard({ restaurant }: { restaurant: RestaurantResponse }) {
   const [snackOpen, setSnackOpen] = React.useState(false);
   const [successText, setSuccessText] = React.useState("Removed restaurant!");
   const [openCreate, setCreate] = useState(false);
+  const [openReserve, setOpenReserve] = useState(false);
+  const { data: session } = useSession();
   const handleClose = (
     event?: React.SyntheticEvent | Event,
     reason?: string
@@ -74,7 +92,7 @@ function RestaurantCard({ restaurant }: { restaurant: RestaurantResponse }) {
 
   const remove = async (id: string) => {
     try {
-      const res = await removeRestaurant(id);
+      const res = await removeRestaurant(id, session?.user.token);
       console.log(res);
       if (res.success) {
         setSuccessText("Removed Restaurant!");
@@ -109,23 +127,40 @@ function RestaurantCard({ restaurant }: { restaurant: RestaurantResponse }) {
           Picture URL: {restaurant.picture}
         </Typography>
       </CardContent>
-      <CardActions sx={{ float: "right" }}>
-        <Button size="small" variant="outlined" onClick={() => setCreate(true)}>
-          Edit restautant
-        </Button>
-        <AddRestaurant
-          openState={[openCreate, setCreate]}
-          restaurantProp={restaurant}
-          idProp={restaurant.id}
-        />
-        <Button
-          variant="outlined"
-          color="error"
-          onClick={() => remove(restaurant.id)}
-          size="small">
-          Delete
-        </Button>
-      </CardActions>
+      {session?.user.data.role === "admin" ? (
+        <CardActions sx={{ float: "right" }}>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => setOpenReserve(true)}>
+            Add Reservation
+          </Button>
+          <AddReservation
+            openState={[openReserve, setOpenReserve]}
+            idProp={restaurant.id}
+          />
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => setCreate(true)}>
+            Edit Restautant
+          </Button>
+          <AddRestaurant
+            openState={[openCreate, setCreate]}
+            restaurantProp={restaurant}
+            idProp={restaurant.id}
+          />
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={() => remove(restaurant.id)}
+            size="small">
+            Delete
+          </Button>
+        </CardActions>
+      ) : (
+        <></>
+      )}
       <Snackbar open={snackOpen} autoHideDuration={3000} onClose={handleClose}>
         <Alert severity="success" sx={{ width: "100%" }} onClose={handleClose}>
           {successText}
@@ -147,6 +182,8 @@ function AddRestaurant({
   const [snackOpen, setSnackOpen] = React.useState(false);
   const [successText, setSuccessText] = React.useState("");
   const router = useRouter();
+  const { data: session } = useSession();
+  const [error, setError] = React.useState(false);
 
   const [restaurant, setRestaurant] =
     useState<RestaurantModel>(restaurantModel);
@@ -164,10 +201,10 @@ function AddRestaurant({
     try {
       let res;
       if (restaurantProp && idProp) {
-        res = await updateRestaurant(restaurant, idProp);
+        res = await updateRestaurant(restaurant, idProp, session?.user.token);
         setSuccessText("Edited Restaurant!");
       } else {
-        res = await createRestaurant(restaurant);
+        res = await createRestaurant(restaurant, session?.user.token);
         setSuccessText("Add Restaurant Completed!");
       }
 
@@ -178,6 +215,10 @@ function AddRestaurant({
         setTimeout(() => {
           router.refresh();
         }, 1000);
+      } else {
+        setSnackOpen(true);
+        setOpen(false);
+        setError(true);
       }
     } catch (err) {
       console.log(err);
@@ -301,9 +342,161 @@ function AddRestaurant({
         </Fade>
       </Modal>
       <Snackbar open={snackOpen} autoHideDuration={3000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity="success" sx={{ width: "100%" }}>
-          {successText}
-        </Alert>
+        {!error ? (
+          <Alert
+            onClose={handleClose}
+            severity="success"
+            sx={{ width: "100%" }}>
+            {successText}
+          </Alert>
+        ) : (
+          <Alert onClose={handleClose} severity="error" sx={{ width: "100%" }}>
+            Cannot create restaurant
+          </Alert>
+        )}
+      </Snackbar>
+    </Fragment>
+  );
+}
+function AddReservation({
+  openState: [open, setOpen],
+
+  idProp,
+}: {
+  openState: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
+
+  idProp: string;
+}) {
+  const [snackOpen, setSnackOpen] = React.useState(false);
+  const [successText, setSuccessText] = React.useState("");
+  const [error, setError] = React.useState(false);
+  const router = useRouter();
+  const { data: session } = useSession();
+
+  const [reservation, setReservation] =
+    useState<ReservationModel>(reservationModel);
+  const onChange = (e: any) => {
+    setReservation({ ...reservation, [e.target.name]: e.target.value });
+  };
+
+  const onSubmit = async () => {
+    try {
+      let res = await createReservation(
+        reservation,
+        idProp,
+        session?.user.token
+      );
+      console.log(res);
+
+      if (res.success) {
+        setSnackOpen(true);
+        setOpen(false);
+        setSuccessText("Added Reservation!");
+        setReservation(reservationModel);
+        setTimeout(() => {
+          router.refresh();
+        }, 1000);
+      } else {
+        setSnackOpen(true);
+        setOpen(false);
+        setError(true);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const handleClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackOpen(false);
+  };
+
+  return (
+    <Fragment>
+      <Modal
+        aria-labelledby="transition-modal-title"
+        aria-describedby="transition-modal-description"
+        open={open}
+        onClose={() => setOpen(false)}
+        closeAfterTransition
+        slots={{ backdrop: Backdrop }}
+        slotProps={{
+          backdrop: {
+            timeout: 500,
+          },
+        }}>
+        <Fade in={open}>
+          <Box
+            sx={{
+              position: "absolute" as "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "50%",
+              bgcolor: "background.paper",
+              border: "1px solid #3f93e8",
+              boxShadow: 24,
+              p: 4,
+            }}
+            className="rounded-xl">
+            <form action={onSubmit} className="flex flex-col gap-4">
+              <Typography
+                variant="h5"
+                className="flex items-center justify-center mb-2">
+                Add Reservation
+              </Typography>
+              <TextField
+                id="name"
+                name="numOfGuests"
+                label="Number of guest"
+                type="number"
+                onChange={onChange}
+                value={reservation.numOfGuests}
+                fullWidth
+                sx={{ display: "block" }}
+              />
+              <LocalizationProvider
+                adapterLocale={"en-gb"}
+                dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  label="Basic date time picker"
+                  value={reservation.bookingDate}
+                  onChange={(newValue) => {
+                    if (newValue != null) {
+                      setReservation({
+                        ...reservation,
+                        bookingDate: newValue.toString(),
+                      });
+                    }
+                  }}
+                />
+              </LocalizationProvider>
+
+              <Button variant="outlined" type="submit">
+                Add Reservation
+              </Button>
+            </form>
+          </Box>
+        </Fade>
+      </Modal>
+      <Snackbar open={snackOpen} autoHideDuration={3000} onClose={handleClose}>
+        {!error ? (
+          <Alert
+            onClose={handleClose}
+            severity="success"
+            sx={{ width: "100%" }}>
+            {successText}
+          </Alert>
+        ) : (
+          <Alert onClose={handleClose} severity="error" sx={{ width: "100%" }}>
+            Cannot make more than 3 reservations
+          </Alert>
+        )}
       </Snackbar>
     </Fragment>
   );

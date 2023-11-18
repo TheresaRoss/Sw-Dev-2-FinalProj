@@ -2,6 +2,7 @@ import NextAuth from "next-auth/next";
 import { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import userLogin from "@/lib/api/user";
+import { getMe } from "@/lib/api/restaurant";
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -23,7 +24,10 @@ export const authOptions: AuthOptions = {
 
         if (user) {
           // Any object returned will be saved in `user` property of the JWT
-          return user;
+
+          const userreal = await getMe(user.token);
+          const mergedUser = { ...user, ...userreal };
+          return mergedUser;
         } else {
           // If you return null then an error will be displayed advising the user to check their details.
           return null;
