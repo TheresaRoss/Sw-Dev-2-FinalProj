@@ -159,7 +159,18 @@ function RestaurantCard({ restaurant }: { restaurant: RestaurantResponse }) {
           </Button>
         </CardActions>
       ) : (
-        <></>
+        <CardActions sx={{ float: "right" }}>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => setOpenReserve(true)}>
+            Add Reservation
+          </Button>
+          <AddReservation
+            openState={[openReserve, setOpenReserve]}
+            idProp={restaurant.id}
+          />
+        </CardActions>
       )}
       <Snackbar open={snackOpen} autoHideDuration={3000} onClose={handleClose}>
         <Alert severity="success" sx={{ width: "100%" }} onClose={handleClose}>
