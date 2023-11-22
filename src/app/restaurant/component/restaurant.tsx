@@ -47,7 +47,7 @@ export default function Restaurant({
   return (
     <div>
       <div className="mb-5 mx-5 flex flex-row items-baseline justify-between">
-        <Typography variant="h5" className="">
+        <Typography className="text-blue-600" variant="h4">
           Restaurant List
         </Typography>
         {session?.user.data.role === "admin" ? (
@@ -277,8 +277,8 @@ function AddRestaurant({
             <form action={onSubmit} className="flex flex-col gap-4">
               <Typography
                 variant="h5"
-                className="flex items-center justify-center mb-2">
-                Add Restaurant
+                className="flex text-blue-600 items-center justify-center mb-2">
+                {idProp ? "Edit Restaurant" : "Add Restaurant"}
               </Typography>
               <TextField
                 id="name"
@@ -458,7 +458,7 @@ function AddReservation({
             <form action={onSubmit} className="flex flex-col gap-4">
               <Typography
                 variant="h5"
-                className="flex items-center justify-center mb-2">
+                className="flex text-blue-600 items-center justify-center mb-2">
                 Add Reservation
               </Typography>
               <TextField

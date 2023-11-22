@@ -13,7 +13,7 @@ export default async function Admin() {
 
   //console.log(reservationList);
   return (
-    <main className="p-5">
+    <main className="">
       <MainRes
         restaurantList={restaurantList.data}
         reservationList={reservationList.data}

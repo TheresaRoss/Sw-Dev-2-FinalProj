@@ -47,11 +47,11 @@ export default function Reservation({
   reservationList: ReservationResponse[];
 }) {
   const [openCreate, setCreate] = useState(false);
-  //console.log(reservationList);
+  console.log(reservationList);
   return (
     <div>
       <div className="mb-5 mx-5 flex flex-row items-baseline justify-between">
-        <Typography variant="h5" className="">
+        <Typography className="text-blue-600" variant="h4">
           Reservation List
         </Typography>
       </div>
@@ -241,7 +241,7 @@ function EditReservation({
             <form action={onSubmit} className="flex flex-col gap-4">
               <Typography
                 variant="h5"
-                className="flex items-center justify-center mb-2">
+                className="flex items-center text-blue-600 justify-center mb-2">
                 Edit Reservation
               </Typography>
               <TextField
