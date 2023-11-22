@@ -111,7 +111,7 @@ function ReservationCard({
         </Typography>
 
         <Typography variant="body2">
-          Booking name: {reservation.user}
+          Booking name: {typeof reservation.user === "string" ? reservation.user : reservation.user.name }
         </Typography>
         <Typography variant="body2">
           Number of Guests: {reservation.numOfGuests}
@@ -122,7 +122,7 @@ function ReservationCard({
         <Typography variant="body2">
           Created At: {reservation.createdAt}
         </Typography>
-        <Typography variant="body2">Reserved By: {reservation.user}</Typography>
+        <Typography variant="body2">Reserved By: {typeof reservation.user === "string" ? reservation.user : reservation.user.name}</Typography>
       </CardContent>
       <CardActions sx={{ float: "right" }}>
         <Button size="small" variant="outlined" onClick={() => setCreate(true)}>
