@@ -36,7 +36,7 @@ import { useRouter } from "next/navigation";
 import React, { useState, useEffect, Fragment } from "react";
 import { createReservation } from "@/lib/api/reservation";
 import { useSession } from "next-auth/react";
-
+import Image from "next/image";
 export default function Restaurant({
   restaurantList,
 }: {
@@ -109,23 +109,38 @@ function RestaurantCard({ restaurant }: { restaurant: RestaurantResponse }) {
 
   return (
     <Card variant="outlined">
-      <CardContent>
-        <Typography variant="h5" component="div">
-          {restaurant.name}
-        </Typography>
+      <CardContent className="flex justify-between flex-row">
+        <div>
+          <Typography variant="h5" component="div">
+            {restaurant.name}
+          </Typography>
 
-        <Typography variant="body2">
-          Food Type: {restaurant.foodtype}
-        </Typography>
-        <Typography variant="body2">Address: {restaurant.address}</Typography>
-        <Typography variant="body2">Province: {restaurant.province}</Typography>
-        <Typography variant="body2">
-          Postal Code: {restaurant.postalcode}
-        </Typography>
-        <Typography variant="body2">Telephone: {restaurant.tel}</Typography>
-        <Typography variant="body2">
-          Picture URL: {restaurant.picture}
-        </Typography>
+          <Typography variant="body2">
+            Food Type: {restaurant.foodtype}
+          </Typography>
+          <Typography variant="body2">Address: {restaurant.address}</Typography>
+          <Typography variant="body2">
+            Province: {restaurant.province}
+          </Typography>
+          <Typography variant="body2">
+            Postal Code: {restaurant.postalcode}
+          </Typography>
+          <Typography variant="body2">Telephone: {restaurant.tel}</Typography>
+          <Typography variant="body2">
+            Picture URL: {restaurant.picture}
+          </Typography>
+        </div>
+
+        <Image
+          width={180}
+          alt="yo"
+          height={180}
+          src={
+            restaurant.picture?.startsWith("/")
+              ? restaurant.picture
+              : "/restaurant4.jpg"
+          }
+        />
       </CardContent>
       {session?.user.data.role === "admin" ? (
         <CardActions sx={{ float: "right" }}>

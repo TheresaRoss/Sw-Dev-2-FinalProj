@@ -70,8 +70,8 @@ export default function MainRes({
   const [tab, setTab] = useState(0);
   const { data: session } = useSession();
   const theme = useTheme();
-  const [mode, setMode] = useState(darkTheme);
-  const [modename, setModeName] = useState("dark");
+  const [mode, setMode] = useState(lightTheme);
+  const [modename, setModeName] = useState("light");
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setTab(newValue);
