@@ -19,7 +19,7 @@ export default function Register() {
 
       if (response) {
         // Registration successful
-        window.location.href = "/";
+        window.location.href = "/api/auth/signin";
         console.log("User registered successfully:", response);
       } else {
         // Registration failed
