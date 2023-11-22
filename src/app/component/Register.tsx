@@ -23,7 +23,10 @@ export default function Register() {
         console.log("User registered successfully:", response);
       } else {
         // Registration failed
-        alert("Please fill out the information completely.");
+        alert(
+          "Please ensure that you fill out all the information completely.\nCheck your email carefully and avoid duplicating your email address."
+        );
+
         console.error("Registration failed");
       }
     } catch (error) {
